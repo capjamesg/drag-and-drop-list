@@ -1,5 +1,7 @@
 # Drag and Drop List
 
+https://github.com/capjamesg/drag-and-drop-list/assets/37276661/291435fa-4dac-4801-9d2c-d4e8e7070290
+
 A web component that lets you drag and drop items in a list to reorder items.
 
 ## Use the Component
