@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Draggable List</title>
+</head>
+<body>
+    <p>Drag and drop to reorder list</p>
+    <draggable-list>
+        <ol>
+            <li>Midnights</li>
+            <li>Taylor Swift</li>
+            <li>Evermore</li>
+            <li>Folklore</li>
+        </ol>
+    </draggable-list>
+</body>
+<template id="draggable-list">
+    <style>
+        li { width: 100px; padding-bottom: 10px; }
+    </style>
+</template>
+<script>
+    class DraggableList extends HTMLElement {
+        constructor () {
+            super();
+            this._shadowRoot = this.attachShadow({mode: 'open'});
+            // get all li elements, add draggable attribute
+            const ul = this.querySelector('ol') || this.querySelector('ul');
+
+            for (let li of ul.children) {
+                li.setAttribute('draggable', true);
+                li.addEventListener('dragstart', this.start);
+                li.addEventListener('drop', this.drop.bind(this));
+                // allow drop
+                li.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    // add line
+                    e.target.style.borderBottom = 'solid 1px darkgrey';
+                });
+                li.addEventListener('dragleave', (e) => {
+                    e.target.style.borderBottom = '';
+                });
+                li.setAttribute('id', li.innerHTML.toLowerCase());
+            }
+
+            this._shadowRoot.appendChild(ul);
+
+            const style = document.createElement('style');
+            style.textContent = `
+                li {
+                    cursor: move;
+                }
+            `;
+            this._shadowRoot.appendChild(style);
+
+            // add template html
+            const template = document.getElementById('draggable-list');
+            this._shadowRoot.appendChild(template.content.cloneNode(true));
+        }
+
+        start (e) {
+            e.dataTransfer.setData('text/plain', e.target.innerHTML);
+            // console.log(e.dataTransfer.getData('text/plain'));
+        }
+
+        drop (e) {
+            e.preventDefault();
+            // get region over which it was dragged
+            const region = e.target;
+            // if element is first in list and drag is in top 50%, move to top
+            if (region === region.parentNode.firstElementChild && e.offsetY < region.offsetHeight / 2) {
+                region.parentNode.insertBefore(e.target, region.parentNode.firstElementChild);
+                return;
+            }
+            // get data from dragstart
+            const data = e.dataTransfer.getData('text/plain');
+            // add new item at drag region
+            const newItem = document.createElement('li');
+            newItem.innerHTML = data;
+            // insert after
+            region.parentNode.insertBefore(newItem, region.nextSibling);
+            // remove old item
+            // reset border
+            region.style.borderBottom = '';
+            const dataId = data.toLowerCase();
+            // remove old item from shadow root
+            this._shadowRoot.getElementById(dataId).remove();
+            newItem.setAttribute('draggable', true);
+            newItem.addEventListener('dragstart', this.start);
+            newItem.addEventListener('drop', this.drop.bind(this));
+            newItem.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                // add line
+                e.target.style.borderBottom = 'solid 1px black';
+            });
+            newItem.addEventListener('dragleave', (e) => {
+                e.target.style.borderBottom = '';
+            });
+            newItem.setAttribute('id', dataId);
+        }
+    
+    }
+
+    customElements.define('draggable-list', DraggableList);
+</script>
+</html>
